@@ -1,5 +1,5 @@
-streamlit
-numpy
+streamlit==1.33.0
+numpy==1.26.4
 matplotlib
 scikit-learn
 pillow
