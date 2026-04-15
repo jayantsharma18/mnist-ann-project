@@ -4,7 +4,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 from streamlit_drawable_canvas import st_canvas
-from model import train_model   # IMPORTANT
+from model import train_model
 
 # ----------- CENTER IMAGE FUNCTION -----------
 def center_image(img_gray):
@@ -38,22 +38,14 @@ def center_image(img_gray):
 
 # ----------- PAGE SETTINGS -----------
 st.set_page_config(page_title="MNIST ANN Model", layout="centered")
-
 st.title("MNIST ANN Model")
 
-# ----------- LOAD MODEL (CACHE) -----------
-if "model" not in st.session_state:
-    model, history, x_test, y_test = train_model()
-    st.session_state.model = model
-    st.session_state.history = history
-    st.session_state.x_test = x_test
-    st.session_state.y_test = y_test
-else:
-    model = st.session_state.model
-    history = st.session_state.history
-    x_test = st.session_state.x_test
-    y_test = st.session_state.y_test
+# ----------- LOAD MODEL (CACHE - VERY IMPORTANT) -----------
+@st.cache_resource
+def load_model():
+    return train_model()
 
+model, history, x_test, y_test = load_model()
 
 # ----------- LOSS GRAPH -----------
 st.subheader("Training Loss vs Epoch")
@@ -63,12 +55,10 @@ ax.plot(history.history['val_loss'], label='Validation Loss')
 ax.legend()
 st.pyplot(fig)
 
-
 # ----------- CONFUSION MATRIX -----------
-y_pred = np.argmax(model.predict(x_test), axis=1)
+y_pred = np.argmax(model.predict(x_test, verbose=0), axis=1)
 st.subheader("Confusion Matrix")
 st.write(confusion_matrix(y_test, y_pred))
-
 
 # ----------- IMAGE UPLOAD -----------
 st.markdown("---")
@@ -85,14 +75,13 @@ if uploaded_file:
     final_img = final_img / 255.0
     final_img = final_img.reshape(1, 28, 28)
 
-    probs = model.predict(final_img)[0]
+    probs = model.predict(final_img, verbose=0)[0]
     pred = np.argmax(probs)
     confidence = np.max(probs) * 100
 
     st.subheader(f"🧠 Prediction: **{pred}**")
     st.write(f"Confidence: {confidence:.2f}%")
     st.progress(int(confidence))
-
 
 # ----------- DRAW SECTION -----------
 st.markdown("---")
@@ -118,7 +107,7 @@ if canvas_result.image_data is not None:
         final_img = final_img / 255.0
         final_img = final_img.reshape(1, 28, 28)
 
-        probs = model.predict(final_img)[0]
+        probs = model.predict(final_img, verbose=0)[0]
         pred = np.argmax(probs)
         confidence = np.max(probs) * 100
 
