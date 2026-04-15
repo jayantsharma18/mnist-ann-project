@@ -58,7 +58,7 @@ if uploaded_file:
         
     final_img = center_image(img_array)
 
-    st.image(final_img, caption="Processed Image (28x28)", width=150)
+    st.image((final_img * 255).astype("uint8"), caption="Processed Drawing (28x28)", width=150)
 
 # Drawing Section
 st.markdown("---")
