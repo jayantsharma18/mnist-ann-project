@@ -1,4 +1,4 @@
-
+import tensorflow as tf
 from tensorflow.keras import layers, models
 from tensorflow.keras.datasets import mnist
 
@@ -23,17 +23,18 @@ def train_model():
     )
 
     early_stopping = tf.keras.callbacks.EarlyStopping(
-        monitor='val_accuracy', 
-        patience=5, 
+        monitor='val_accuracy',
+        patience=5,
         restore_best_weights=True
     )
 
     history = model.fit(
         x_train, y_train,
-        epochs=50,
+        epochs=15,   # 🔥 reduced (important for cloud)
         batch_size=32,
         validation_data=(x_test, y_test),
-        callbacks=[early_stopping]
+        callbacks=[early_stopping],
+        verbose=0   # cleaner logs
     )
 
     return model, history, x_test, y_test
