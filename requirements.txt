@@ -1,5 +1,7 @@
 streamlit
+numpy
 matplotlib
 scikit-learn
 pillow
 streamlit-drawable-canvas
+tensorflow-cpu==2.15.0
