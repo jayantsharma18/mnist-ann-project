@@ -1,40 +1,42 @@
-import tensorflow as tf
-from tensorflow.keras import layers, models
-from tensorflow.keras.datasets import mnist
+from sklearn.neural_network import MLPClassifier
+from sklearn.datasets import fetch_openml
+import numpy as np
+
+class HistoryObject:
+    def __init__(self, loss, val_loss):
+        self.history = {
+            'loss': loss,
+            'val_loss': val_loss
+        }
 
 def train_model():
-    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    from sklearn.datasets import fetch_openml
+    mnist = fetch_openml('mnist_784', version=1, as_frame=False, parser='auto')
+    X, y = mnist.data / 255.0, mnist.target.astype(int)
 
-    x_train = x_train / 255.0
-    x_test = x_test / 255.0
+    x_train, x_test = X[:60000], X[60000:]
+    y_train, y_test = y[:60000], y[60000:]
 
-    model = models.Sequential([
-        layers.Flatten(input_shape=(28, 28)),
-        layers.Dense(64, activation='relu'),
-        layers.Dense(64, activation='relu'),
-        layers.Dense(32, activation='relu'),
-        layers.Dense(10, activation='softmax')
-    ])
-
-    model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
-        loss='sparse_categorical_crossentropy',
-        metrics=['accuracy']
+    model = MLPClassifier(
+        hidden_layer_sizes=(64, 64, 32),
+        activation='relu',
+        learning_rate_init=1e-4,
+        max_iter=15,
+        verbose=False,
+        early_stopping=True,
+        validation_fraction=0.1,
+        random_state=42
     )
 
-    early_stopping = tf.keras.callbacks.EarlyStopping(
-        monitor='val_accuracy',
-        patience=5,
-        restore_best_weights=True
-    )
+    losses = []
+    val_losses = []
+    for i in range(1, 16):
+        model.max_iter = i
+        model.warm_start = True
+        model.fit(x_train, y_train)
+        losses.append(model.loss_)
+        val_losses.append(model.best_validation_score_)
 
-    history = model.fit(
-        x_train, y_train,
-        epochs=15,   # 🔥 reduced (important for cloud)
-        batch_size=32,
-        validation_data=(x_test, y_test),
-        callbacks=[early_stopping],
-        verbose=0   # cleaner logs
-    )
-
-    return model, history, x_test, y_test
+    history = HistoryObject(losses, val_losses)
+    x_test_reshaped = x_test.reshape(-1, 28, 28)
+    return model, history, x_test_reshaped, y_test
