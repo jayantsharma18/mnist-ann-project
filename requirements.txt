@@ -4,4 +4,3 @@ matplotlib
 scikit-learn
 pillow
 streamlit-drawable-canvas
-tensorflow-cpu==2.16.1
